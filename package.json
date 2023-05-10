@@ -1,0 +1,17 @@
+{
+    "name": "com.victorguleshov.utilities",
+    "version": "1.0.0",
+    "displayName": "VG Utilities",
+    "unity": "2019.1",
+    "keywords": [
+        "utilities",
+        "extensions",
+        "features"
+    ],
+    "author": {
+        "name": "Victor Guleshov",
+        "email": "victorguleshov@gmail.com"
+    },
+    "type": "tool",
+    "description": "Just a bunch of useful utilities by VG"
+}

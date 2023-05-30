@@ -1,40 +1,37 @@
 using UnityEngine;
 
-public class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
+namespace VG
 {
-    private static T _instance;
-
-    public static T Instance
+    public class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
     {
-        get
-        {
-            if (_instance == false)
-                _instance = FindObjectOfType<T> ();
+        private static T _instance;
 
-            return _instance;
+        public bool DestroyOnLoad = true;
+
+        public static T Instance
+        {
+            get
+            {
+                if (_instance == false)
+                    _instance = FindObjectOfType<T>();
+
+                return _instance;
+            }
         }
+
+        #region Unity methods
+
+        protected virtual void Awake()
+        {
+            if (_instance && _instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            if (DestroyOnLoad == false) DontDestroyOnLoad(gameObject);
+        }
+
+        #endregion
     }
-
-    public bool DestroyOnLoad = true;
-
-    #region Unity methods
-
-    protected virtual void Awake ()
-    {
-        if(_instance && _instance != this)
-        {
-            Destroy (gameObject);
-            return;
-        }
-
-        if (DestroyOnLoad == false)
-        {
-            DontDestroyOnLoad (gameObject);
-        }
-
-    }
-
-
-
-    #endregion
 }

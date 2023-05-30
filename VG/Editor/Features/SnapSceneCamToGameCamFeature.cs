@@ -3,12 +3,12 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace VG.Editor
+namespace VG.Editor.Features
 {
     public class SnapSceneCamToGameCamFeature
     {
-        [MenuItem ("Tools/VG/Snap SceneCam To GameCam")]
-        public static void SnapSceneCamToGameCam ()
+        [MenuItem("Tools/VG/Snap SceneCam To GameCam")]
+        public static void SnapSceneCamToGameCam()
         {
             var sceneView = SceneView.lastActiveSceneView;
 
@@ -19,7 +19,7 @@ namespace VG.Editor
 
                 if (sceneCam != null && gameCam != null)
                 {
-                    sceneView.AlignViewToObject (gameCam.transform);
+                    sceneView.AlignViewToObject(gameCam.transform);
                     sceneView.orthographic = gameCam.orthographic;
 
                     // sceneCam.CopyFrom (gameCam);

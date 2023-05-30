@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace VG.Utilities
+namespace VG
 {
     public class OpenUrl : MonoBehaviour
     {

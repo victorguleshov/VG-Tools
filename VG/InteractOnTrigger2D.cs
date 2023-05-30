@@ -4,39 +4,42 @@ using UnityEngine;
 using UnityEngine.Events;
 using VG.Extensions;
 
-[RequireComponent (typeof (Collider2D))]
-public class InteractOnTrigger2D : MonoBehaviour
+namespace VG
 {
-    public LayerMask layers = -1;
-    public TriggerEvent onTriggerEnter, onTriggerExit;
-    public List<Collider2D> overlapped = new();
-
-    private void OnTriggerEnter2D (Collider2D other)
+    [RequireComponent(typeof(Collider2D))]
+    public class InteractOnTrigger2D : MonoBehaviour
     {
-        if (layers.Contains (other.gameObject))
+        public LayerMask layers = -1;
+        public TriggerEvent onTriggerEnter, onTriggerExit;
+        public List<Collider2D> overlapped = new();
+
+        private void OnDisable()
         {
-            overlapped.Add (other);
-            onTriggerEnter.Invoke (other);
+            foreach (var other in overlapped) onTriggerExit.Invoke(other);
+            overlapped.Clear();
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (layers.Contains(other.gameObject))
+            {
+                overlapped.Add(other);
+                onTriggerEnter.Invoke(other);
+            }
+        }
+
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            if (layers.Contains(other.gameObject))
+            {
+                overlapped.Remove(other);
+                onTriggerExit.Invoke(other);
+            }
+        }
+
+        [Serializable]
+        public class TriggerEvent : UnityEvent<Collider2D>
+        {
         }
     }
-
-    private void OnTriggerExit2D (Collider2D other)
-    {
-        if (layers.Contains (other.gameObject))
-        {
-            overlapped.Remove (other);
-            onTriggerExit.Invoke (other);
-        }
-    }
-
-    private void OnDisable ()
-    {
-        foreach (var other in overlapped)
-        {
-            onTriggerExit.Invoke (other);
-        }
-        overlapped.Clear ();
-    }
-
-    [Serializable] public class TriggerEvent : UnityEvent<Collider2D> { }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -11,15 +10,15 @@ namespace VG
     public class UniversalSlider : MonoBehaviour
     {
         [SerializeField] private Slider slider;
-        [SerializeField] private List<Image> images = new List<Image> ();
-        [SerializeField] private List<TextMeshProUGUI> texts = new List<TextMeshProUGUI> ();
+        [SerializeField] private List<Image> images = new();
+        [SerializeField] private List<TextMeshProUGUI> texts = new();
 
         private ReadOnlyCollection<Image> imagesWrapper;
         private ReadOnlyCollection<TextMeshProUGUI> textsWrapper;
 
         public Slider Slider => slider;
-        public ReadOnlyCollection<Image> Images => imagesWrapper ??= images.AsReadOnly ();
-        public ReadOnlyCollection<TextMeshProUGUI> Texts => textsWrapper ??= texts.AsReadOnly ();
+        public ReadOnlyCollection<Image> Images => imagesWrapper ??= images.AsReadOnly();
+        public ReadOnlyCollection<TextMeshProUGUI> Texts => textsWrapper ??= texts.AsReadOnly();
 
         public Image image => Images[0];
         public Image secondImage => Images[1];
@@ -37,6 +36,7 @@ namespace VG
             get => primaryText.text;
             set => primaryText.text = value;
         }
+
         public Sprite sprite
         {
             get => image.sprite;
@@ -49,11 +49,11 @@ namespace VG
             set => slider.value = value;
         }
 
-        private void Reset ()
+        private void Reset()
         {
-            slider = GetComponentInChildren<Slider> ();
-            images = GetComponentsInChildren<Image> ().ToList ();
-            texts = GetComponentsInChildren<TextMeshProUGUI> ().ToList ();
+            slider = GetComponentInChildren<Slider>();
+            images = GetComponentsInChildren<Image>().ToList();
+            texts = GetComponentsInChildren<TextMeshProUGUI>().ToList();
         }
     }
 }

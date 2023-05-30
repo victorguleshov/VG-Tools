@@ -1,76 +1,62 @@
 using System;
 
-namespace VG
+namespace VG.Extensions
 {
     public static class ObjectExtensionMethods
     {
-        public static void CopyPropertiesFrom (this object self, object parent)
+        public static void CopyPropertiesFrom(this object self, object parent)
         {
-            var fromProperties = parent.GetType ().GetProperties ();
-            var toProperties = self.GetType ().GetProperties ();
+            var fromProperties = parent.GetType().GetProperties();
+            var toProperties = self.GetType().GetProperties();
 
             foreach (var fromProperty in fromProperties)
-            {
-                foreach (var toProperty in toProperties)
+            foreach (var toProperty in toProperties)
+                if (fromProperty.Name == toProperty.Name && fromProperty.PropertyType == toProperty.PropertyType)
                 {
-                    if (fromProperty.Name == toProperty.Name && fromProperty.PropertyType == toProperty.PropertyType)
-                    {
-                        if (toProperty.CanWrite)
-                            toProperty.SetValue (self, fromProperty.GetValue (parent));
-                        break;
-                    }
+                    if (toProperty.CanWrite)
+                        toProperty.SetValue(self, fromProperty.GetValue(parent));
+                    break;
                 }
-            }
         }
 
-        [AttributeUsage (AttributeTargets.Property)]
-        public class MatchParentAttribute : Attribute
+        public static void MatchPropertiesFrom(this object self, object parent)
         {
-            public readonly string ParentPropertyName;
-            public MatchParentAttribute (string parentPropertyName)
-            {
-                ParentPropertyName = parentPropertyName;
-            }
-        }
-
-        public static void MatchPropertiesFrom (this object self, object parent)
-        {
-            var childProperties = self.GetType ().GetProperties ();
+            var childProperties = self.GetType().GetProperties();
             foreach (var childProperty in childProperties)
             {
-                var attributesForProperty = childProperty.GetCustomAttributes (typeof (MatchParentAttribute), true);
+                var attributesForProperty = childProperty.GetCustomAttributes(typeof(MatchParentAttribute), true);
                 var isOfTypeMatchParentAttribute = false;
 
                 MatchParentAttribute currentAttribute = null;
 
                 foreach (var attribute in attributesForProperty)
-                {
-                    if (attribute.GetType () == typeof (MatchParentAttribute))
+                    if (attribute.GetType() == typeof(MatchParentAttribute))
                     {
                         isOfTypeMatchParentAttribute = true;
-                        currentAttribute = (MatchParentAttribute) attribute;
+                        currentAttribute = (MatchParentAttribute)attribute;
                         break;
                     }
-                }
 
                 if (isOfTypeMatchParentAttribute)
                 {
-                    var parentProperties = parent.GetType ().GetProperties ();
+                    var parentProperties = parent.GetType().GetProperties();
                     object parentPropertyValue = null;
                     foreach (var parentProperty in parentProperties)
-                    {
                         if (parentProperty.Name == currentAttribute.ParentPropertyName)
-                        {
                             if (parentProperty.PropertyType == childProperty.PropertyType)
-                            {
-                                parentPropertyValue = parentProperty.GetValue (parent);
-                            }
-                        }
-                    }
+                                parentPropertyValue = parentProperty.GetValue(parent);
                     if (childProperty.CanWrite)
-                        childProperty.SetValue (self, parentPropertyValue);
+                        childProperty.SetValue(self, parentPropertyValue);
                 }
             }
+        }
+
+        [AttributeUsage(AttributeTargets.Property)]
+        public class MatchParentAttribute : Attribute
+        {
+            public readonly string ParentPropertyName;
+
+            public MatchParentAttribute(string parentPropertyName) => ParentPropertyName = parentPropertyName;
         }
     }
 }

@@ -11,13 +11,10 @@ namespace VG.Extensions
         /// <param name="genetiv">Родительный падеж слова. Например "дня"</param>
         /// <param name="plural">Множественное число слова. Например "дней"</param>
         /// <returns></returns>
-        public static string GetDeclension (this int number, string nominativ, string genetiv, string plural)
+        public static string GetDeclension(this int number, string nominativ, string genetiv, string plural)
         {
             number %= 100;
-            if (number >= 11 && number <= 19)
-            {
-                return plural;
-            }
+            if (number >= 11 && number <= 19) return plural;
 
             var i = number % 10;
             switch (i)
@@ -32,19 +29,12 @@ namespace VG.Extensions
                     return plural;
             }
         }
-        
-        public static int GreatestCommonDivisor (params int[] numbers)
-        {
-            return numbers.Aggregate(GreatestCommonDivisor);
-        }
-        public static int GreatestCommonDivisor (this IEnumerable<int> numbers)
-        {
-            return numbers.Aggregate(GreatestCommonDivisor);
-        }
 
-        public static int GreatestCommonDivisor(int x, int y)
-        {
-            return y == 0 ? x : GreatestCommonDivisor(y, x % y);
-        }
+        public static int GreatestCommonDivisor(params int[] numbers) => numbers.Aggregate(GreatestCommonDivisor);
+
+        public static int GreatestCommonDivisor(this IEnumerable<int> numbers) =>
+            numbers.Aggregate(GreatestCommonDivisor);
+
+        public static int GreatestCommonDivisor(int x, int y) => y == 0 ? x : GreatestCommonDivisor(y, x % y);
     }
 }

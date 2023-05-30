@@ -2,13 +2,16 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ButtonMirrorOnClick : MonoBehaviour, IPointerClickHandler
+namespace VG
 {
-    [Header ("Invoke listener of this button")]
-    [SerializeField] private Button button;
-
-    public void OnPointerClick (PointerEventData eventData)
+    public class ButtonMirrorOnClick : MonoBehaviour, IPointerClickHandler
     {
-        if (button) button.onClick.Invoke ();
+        [Header("Invoke listener of this button")] [SerializeField]
+        private Button button;
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (button) button.onClick.Invoke();
+        }
     }
 }

@@ -1,12 +1,15 @@
 ﻿using System;
 using UnityEngine;
 
-public class AnimationEventListener : MonoBehaviour
+namespace VG
 {
-    public event Action<string> listener;
-    
-    public void SendEvent (string eventName)
+    public class AnimationEventListener : MonoBehaviour
     {
-        listener?.Invoke (eventName);
+        public event Action<string> listener;
+
+        public void SendEvent(string eventName)
+        {
+            listener?.Invoke(eventName);
+        }
     }
 }

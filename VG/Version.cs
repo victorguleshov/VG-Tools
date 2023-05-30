@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace VG.Utilities
+namespace VG
 {
     [RequireComponent(typeof(TMP_Text))]
     public class Version : MonoBehaviour

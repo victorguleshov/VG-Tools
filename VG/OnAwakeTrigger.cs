@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace VG.Extensions
+namespace VG
 {
     public class OnAwakeTrigger : MonoBehaviour
     {

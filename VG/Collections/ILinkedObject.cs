@@ -6,6 +6,6 @@ namespace VG.Collections
         T next { get; set; }
         T prev { get; set; }
 
-        void Invalidate ();
+        void Invalidate();
     }
 }

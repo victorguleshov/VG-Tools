@@ -1,30 +1,31 @@
 ﻿using TMPro;
 using UnityEngine;
 
-[ExecuteInEditMode]
-[RequireComponent (typeof (TextMeshPro))]
-public class TMP_DoubleText : MonoBehaviour
+namespace VG
 {
-    private TextMeshPro to;
-    [SerializeField] private TextMeshPro copyFrom;
+    [ExecuteInEditMode]
+    [RequireComponent(typeof(TextMeshPro))]
+    public class TMP_DoubleText : MonoBehaviour
+    {
+        [SerializeField] private TextMeshPro copyFrom;
+        private TextMeshPro to;
 
-    private void Awake ()
-    {
-        Reset ();
-    }
-    private void Reset ()
-    {
-        if (!to) to = GetComponent<TextMeshPro> ();
-    }
-    private void LateUpdate ()
-    {
-        if (!to) Reset ();
-        if (copyFrom)
+        private void Awake()
         {
-            if (copyFrom.text != to.text)
-            {
-                to.text = copyFrom.text;
-            }
+            Reset();
+        }
+
+        private void Reset()
+        {
+            if (!to) to = GetComponent<TextMeshPro>();
+        }
+
+        private void LateUpdate()
+        {
+            if (!to) Reset();
+            if (copyFrom)
+                if (copyFrom.text != to.text)
+                    to.text = copyFrom.text;
         }
     }
 }

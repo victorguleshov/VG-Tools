@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: UI_MonoColor
-  m_Shader: {fileID: 4800000, guid: b9bb43d4322274ccc8f5be7daf3983cd, type: 3}
+  m_Name: UI-MonoColor
+  m_Shader: {fileID: 4800000, guid: 4a29d77e699814507945c6d20b6b50b6, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4

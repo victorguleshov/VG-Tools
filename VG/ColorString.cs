@@ -30,7 +30,7 @@ namespace VG
             else
                 colorString = "white";
 
-            string result = string.Format("<color={0}> {1} : </color> {2}", colorString, header, message);
+            var result = string.Format("<color={0}> {1} : </color> {2}", colorString, header, message);
 
 #else
             string result = string.Format("{0} : {1}", header, message);

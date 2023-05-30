@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace VG.Extensions
 {
@@ -37,74 +38,78 @@ namespace VG.Extensions
         private static float[] rotTimeRegister;
         private static int rotationSamplesTaken;
 
-        public static void Init ()
+        public static void Init()
         {
-            tempChild = new GameObject ("Math3d_TempChild").transform;
-            tempParent = new GameObject ("Math3d_TempParent").transform;
+            tempChild = new GameObject("Math3d_TempChild").transform;
+            tempParent = new GameObject("Math3d_TempParent").transform;
 
             tempChild.gameObject.hideFlags = HideFlags.HideAndDontSave;
-            MonoBehaviour.DontDestroyOnLoad (tempChild.gameObject);
+            Object.DontDestroyOnLoad(tempChild.gameObject);
 
             tempParent.gameObject.hideFlags = HideFlags.HideAndDontSave;
-            MonoBehaviour.DontDestroyOnLoad (tempParent.gameObject);
+            Object.DontDestroyOnLoad(tempParent.gameObject);
 
             // set the parent
             tempChild.parent = tempParent;
         }
 
         /// <summary>
-        /// Get a point on a Catmull-Rom spline.
-        /// The percentage is in range 0 to 1, which starts at the second control point and ends at the second last control point. 
-        /// The array cPoints should contain all control points. The minimum amount of control points should be 4. 
-        /// Source: https://forum.unity.com/threads/waypoints-and-constant-variable-speed-problems.32954/#post-213942
+        ///     Get a point on a Catmull-Rom spline.
+        ///     The percentage is in range 0 to 1, which starts at the second control point and ends at the second last control
+        ///     point.
+        ///     The array cPoints should contain all control points. The minimum amount of control points should be 4.
+        ///     Source: https://forum.unity.com/threads/waypoints-and-constant-variable-speed-problems.32954/#post-213942
         /// </summary>
-        public static Vector2 GetPointOnSpline (float percentage, Vector2[] cPoints)
+        public static Vector2 GetPointOnSpline(float percentage, Vector2[] cPoints)
         {
             // Minimum size is 4
             if (cPoints.Length >= 4)
             {
                 // Convert the input range (0 to 1) to range (0 to numSections)
                 var numSections = cPoints.Length - 3;
-                var curPoint = Mathf.Min (Mathf.FloorToInt (percentage * (float) numSections), numSections - 1);
-                var t = percentage * (float) numSections - (float) curPoint;
+                var curPoint = Mathf.Min(Mathf.FloorToInt(percentage * numSections), numSections - 1);
+                var t = percentage * numSections - curPoint;
 
                 // Get the 4 control points around the location to be sampled.
-                Vector2 p0 = cPoints[curPoint];
-                Vector2 p1 = cPoints[curPoint + 1];
-                Vector2 p2 = cPoints[curPoint + 2];
-                Vector2 p3 = cPoints[curPoint + 3];
+                var p0 = cPoints[curPoint];
+                var p1 = cPoints[curPoint + 1];
+                var p2 = cPoints[curPoint + 2];
+                var p3 = cPoints[curPoint + 3];
 
                 // The Catmull-Rom spline can be written as:
                 // 0.5 * (2*P1 + (-P0 + P2) * t + (2*P0 - 5*P1 + 4*P2 - P3) * t^2 + (-P0 + 3*P1 - 3*P2 + P3) * t^3)
                 // Variables P0 to P3 are the control points.
                 // Variable t is the position on the spline, with a range of 0 to numSections.
                 // C# way of writing the function. Note that f means float (to force precision).
-                Vector2 result = .5f * (2f * p1 + (-p0 + p2) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * (t * t) + (-p0 + 3f * p1 - 3f * p2 + p3) * (t * t * t));
+                var result = .5f * (2f * p1 + (-p0 + p2) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * (t * t) +
+                                    (-p0 + 3f * p1 - 3f * p2 + p3) * (t * t * t));
 
-                return new Vector2 (result.x, result.y);
+                return new Vector2(result.x, result.y);
             }
 
-            else
-            {
-                return new Vector2 (0, 0);
-            }
+            return new Vector2(0, 0);
         }
 
         /// <summary>
-        /// Finds the intersection points between a straight line and a spline. Solves a Cubic polynomial equation
-        /// The output is in the form of a percentage along the length of the spline (range 0 to 1).
-        /// The linePoints array should contain two points which form a straight line.
-        /// The cPoints array should contain all the control points of the spline.
-        /// Use case: create a gauge with a non-linear scale by defining an array with needle angles vs the number it should point at. The array creates a spline.
-        /// Driving the needle with a float in range 0 to 1 gives an unpredictable result. Instead, use the GetLineSplineIntersections() function to find the angle the
-        /// gauge needle should have for a given number it should point at. In this case, cPoints should contain x for angle and y for scale number.
-        /// Make a horizontal line at the given scale number (y) you want to find the needle angle for. The returned float is a percentage location on the spline (range 0 to 1). 
-        /// Plug this value into the GetPointOnSpline() function to get the x coordinate which represents the needle angle.
-        /// Source: https://medium.com/@csaba.apagyi/finding-catmull-rom-spline-and-line-intersection-part-2-mathematical-approach-dfb969019746
+        ///     Finds the intersection points between a straight line and a spline. Solves a Cubic polynomial equation
+        ///     The output is in the form of a percentage along the length of the spline (range 0 to 1).
+        ///     The linePoints array should contain two points which form a straight line.
+        ///     The cPoints array should contain all the control points of the spline.
+        ///     Use case: create a gauge with a non-linear scale by defining an array with needle angles vs the number it should
+        ///     point at. The array creates a spline.
+        ///     Driving the needle with a float in range 0 to 1 gives an unpredictable result. Instead, use the
+        ///     GetLineSplineIntersections() function to find the angle the
+        ///     gauge needle should have for a given number it should point at. In this case, cPoints should contain x for angle
+        ///     and y for scale number.
+        ///     Make a horizontal line at the given scale number (y) you want to find the needle angle for. The returned float is a
+        ///     percentage location on the spline (range 0 to 1).
+        ///     Plug this value into the GetPointOnSpline() function to get the x coordinate which represents the needle angle.
+        ///     Source:
+        ///     https://medium.com/@csaba.apagyi/finding-catmull-rom-spline-and-line-intersection-part-2-mathematical-approach-dfb969019746
         /// </summary>
-        public static float[] GetLineSplineIntersections (Vector2[] linePoints, Vector2[] cPoints)
+        public static float[] GetLineSplineIntersections(Vector2[] linePoints, Vector2[] cPoints)
         {
-            List<float> list = new List<float> ();
+            var list = new List<float>();
             float[] crossings;
 
             var numSections = cPoints.Length - 3;
@@ -114,10 +119,10 @@ namespace VG.Extensions
             for (var i = 0; i < numSections; i++)
             {
                 // Get the 4 control points around the location to be sampled.
-                Vector2 p0 = cPoints[i];
-                Vector2 p1 = cPoints[i + 1];
-                Vector2 p2 = cPoints[i + 2];
-                Vector2 p3 = cPoints[i + 3];
+                var p0 = cPoints[i];
+                var p1 = cPoints[i + 1];
+                var p2 = cPoints[i + 2];
+                var p3 = cPoints[i + 3];
 
                 // The Catmull-Rom spline can be written as:
                 // 0.5 * (2P1 + (-P0 + P2) * t + (2P0 - 5P1 + 4P2 - P3) * t^2 + (-P0 + 3P1 - 3P2 + P3) * t^3)
@@ -159,7 +164,8 @@ namespace VG.Extensions
                 // Ax + By + C = 0
                 var A = linePoints[0].y - linePoints[1].y;
                 var B = linePoints[1].x - linePoints[0].x;
-                var C = (linePoints[0].x - linePoints[1].x) * linePoints[0].y + (linePoints[1].y - linePoints[0].y) * linePoints[0].x;
+                var C = (linePoints[0].x - linePoints[1].x) * linePoints[0].y +
+                        (linePoints[1].y - linePoints[0].y) * linePoints[0].x;
 
                 // Substituting the values of x and y from the separated Spline formula into the Line formula, we get:
                 // A * (a1 * t^3 + b1 * t^2 + c1 * t + d1) + B * (a2 * t^3 + b2 * t^2 + c2 * t + d2) + C = 0
@@ -187,11 +193,11 @@ namespace VG.Extensions
 
                 // Two different implementations of solving a Cubic equation.
                 // 	SolveCubic2(out crossAmount, out cross1, out cross2, out cross3, a, b, c, d);
-                SolveCubic (out crossAmount, out cross1, out cross2, out cross3, a, b, c, d);
+                SolveCubic(out crossAmount, out cross1, out cross2, out cross3, a, b, c, d);
 
                 // Get the highest and lowest value (in range 0 to 1) of the current section and calculate the difference.
-                var currentSectionLowest = (float) i / (float) numSections;
-                var currentSectionHighest = ((float) i + 1f) / (float) numSections;
+                var currentSectionLowest = i / (float)numSections;
+                var currentSectionHighest = (i + 1f) / numSections;
                 var diff = currentSectionHighest - currentSectionLowest;
 
                 // Only use the result if it is within range 0 to 1.
@@ -203,7 +209,7 @@ namespace VG.Extensions
                     crossCorrected = cross1 * diff + currentSectionLowest;
 
                     // Add the result to the list.
-                    list.Add (crossCorrected);
+                    list.Add(crossCorrected);
                 }
 
                 if (cross2 >= 0 && cross2 <= 1)
@@ -212,7 +218,7 @@ namespace VG.Extensions
                     crossCorrected = cross2 * diff + currentSectionLowest;
 
                     // Add the result to the list.
-                    list.Add (crossCorrected);
+                    list.Add(crossCorrected);
                 }
 
                 if (cross3 >= 0 && cross3 <= 1)
@@ -221,21 +227,22 @@ namespace VG.Extensions
                     crossCorrected = cross3 * diff + currentSectionLowest;
 
                     // Add the result to the list.
-                    list.Add (crossCorrected);
+                    list.Add(crossCorrected);
                 }
             }
 
             // Convert the list to an array.
-            crossings = list.ToArray ();
+            crossings = list.ToArray();
 
             return crossings;
         }
 
         /// <summary>
-        /// Solve cubic equation according to Cardano. 
-        /// Source: https://www.cs.rit.edu/~ark/pj/lib/edu/rit/numeric/Cubic.shtml
+        ///     Solve cubic equation according to Cardano.
+        ///     Source: https://www.cs.rit.edu/~ark/pj/lib/edu/rit/numeric/Cubic.shtml
         /// </summary>
-        private static void SolveCubic (out int nRoots, out float x1, out float x2, out float x3, float a, float b, float c, float d)
+        private static void SolveCubic(out int nRoots, out float x1, out float x2, out float x3, float a, float b,
+            float c, float d)
         {
             var TWO_PI = 2f * Mathf.PI;
             var FOUR_PI = 4f * Mathf.PI;
@@ -258,20 +265,20 @@ namespace VG.Extensions
             {
                 // Three unequal real roots.
                 nRoots = 3;
-                var theta = Mathf.Acos (R / Mathf.Sqrt (-Q_CUBE));
-                var SQRT_Q = Mathf.Sqrt (-Q);
-                x1 = 2f * SQRT_Q * Mathf.Cos (theta / 3f) - a_over_3;
-                x2 = 2f * SQRT_Q * Mathf.Cos ((theta + TWO_PI) / 3f) - a_over_3;
-                x3 = 2f * SQRT_Q * Mathf.Cos ((theta + FOUR_PI) / 3f) - a_over_3;
+                var theta = Mathf.Acos(R / Mathf.Sqrt(-Q_CUBE));
+                var SQRT_Q = Mathf.Sqrt(-Q);
+                x1 = 2f * SQRT_Q * Mathf.Cos(theta / 3f) - a_over_3;
+                x2 = 2f * SQRT_Q * Mathf.Cos((theta + TWO_PI) / 3f) - a_over_3;
+                x3 = 2f * SQRT_Q * Mathf.Cos((theta + FOUR_PI) / 3f) - a_over_3;
             }
 
             else if (D > 0.0f)
             {
                 // One real root.
                 nRoots = 1;
-                var SQRT_D = Mathf.Sqrt (D);
-                var S = CubeRoot (R + SQRT_D);
-                var T = CubeRoot (R - SQRT_D);
+                var SQRT_D = Mathf.Sqrt(D);
+                var S = CubeRoot(R + SQRT_D);
+                var T = CubeRoot(R - SQRT_D);
                 x1 = S + T - a_over_3;
                 x2 = float.NaN;
                 x3 = float.NaN;
@@ -281,7 +288,7 @@ namespace VG.Extensions
             {
                 // Three real roots, at least two equal.
                 nRoots = 3;
-                var CBRT_R = CubeRoot (R);
+                var CBRT_R = CubeRoot(R);
                 x1 = 2 * CBRT_R - a_over_3;
                 x2 = CBRT_R - a_over_3;
                 x3 = x2;
@@ -289,28 +296,23 @@ namespace VG.Extensions
         }
 
         /// <summary>
-        /// Mathf.Pow is used as an alternative for cube root (Math.cbrt) here.
+        ///     Mathf.Pow is used as an alternative for cube root (Math.cbrt) here.
         /// </summary>
-        private static float CubeRoot (float d)
+        private static float CubeRoot(float d)
         {
             if (d < 0.0f)
-            {
-                return -Mathf.Pow (-d, 1f / 3f);
-            }
+                return -Mathf.Pow(-d, 1f / 3f);
 
-            else
-            {
-                return Mathf.Pow (d, 1f / 3f);
-            }
+            return Mathf.Pow(d, 1f / 3f);
         }
 
         /// <summary>
-        /// increase or decrease the length of vector by size
+        ///     increase or decrease the length of vector by size
         /// </summary>
-        public static Vector3 AddVectorLength (Vector3 vector, float size)
+        public static Vector3 AddVectorLength(Vector3 vector, float size)
         {
             // get the vector length
-            var magnitude = Vector3.Magnitude (vector);
+            var magnitude = Vector3.Magnitude(vector);
 
             // calculate new vector length
             var newMagnitude = magnitude + size;
@@ -323,73 +325,74 @@ namespace VG.Extensions
         }
 
         /// <summary>
-        /// create a vector of direction "vector" with length "size"
+        ///     create a vector of direction "vector" with length "size"
         /// </summary>
-        public static Vector3 SetVectorLength (Vector3 vector, float size)
+        public static Vector3 SetVectorLength(Vector3 vector, float size)
         {
             // normalize the vector
-            Vector3 vectorNormalized = Vector3.Normalize (vector);
+            var vectorNormalized = Vector3.Normalize(vector);
 
             // scale the vector
             return vectorNormalized *= size;
         }
 
         /// <summary>
-        /// caclulate the rotational difference from A to B
+        ///     caclulate the rotational difference from A to B
         /// </summary>
-        public static Quaternion SubtractRotation (Quaternion B, Quaternion A)
+        public static Quaternion SubtractRotation(Quaternion B, Quaternion A)
         {
-            Quaternion C = Quaternion.Inverse (A) * B;
+            var C = Quaternion.Inverse(A) * B;
             return C;
         }
 
         /// <summary>
-        /// Add rotation B to rotation A.
+        ///     Add rotation B to rotation A.
         /// </summary>
-        public static Quaternion AddRotation (Quaternion A, Quaternion B)
+        public static Quaternion AddRotation(Quaternion A, Quaternion B)
         {
-            Quaternion C = A * B;
+            var C = A * B;
             return C;
         }
 
         /// <summary>
-        /// Same as the build in TransformDirection(), but using a rotation instead of a transform.
+        ///     Same as the build in TransformDirection(), but using a rotation instead of a transform.
         /// </summary>
-        public static Vector3 TransformDirectionMath (Quaternion rotation, Vector3 vector)
+        public static Vector3 TransformDirectionMath(Quaternion rotation, Vector3 vector)
         {
-            Vector3 output = rotation * vector;
+            var output = rotation * vector;
             return output;
         }
 
         /// <summary>
-        /// Same as the build in InverseTransformDirection(), but using a rotation instead of a transform.
+        ///     Same as the build in InverseTransformDirection(), but using a rotation instead of a transform.
         /// </summary>
-        public static Vector3 InverseTransformDirectionMath (Quaternion rotation, Vector3 vector)
+        public static Vector3 InverseTransformDirectionMath(Quaternion rotation, Vector3 vector)
         {
-            Vector3 output = Quaternion.Inverse (rotation) * vector;
+            var output = Quaternion.Inverse(rotation) * vector;
             return output;
         }
 
         /// <summary>
-        /// Rotate a vector as if it is attached to an object with rotation "from", which is then rotated to rotation "to".
-        /// Similar to TransformWithParent(), but rotating a vector instead of a transform.
+        ///     Rotate a vector as if it is attached to an object with rotation "from", which is then rotated to rotation "to".
+        ///     Similar to TransformWithParent(), but rotating a vector instead of a transform.
         /// </summary>
-        public static Vector3 RotateVectorFromTo (Quaternion from, Quaternion to, Vector3 vector)
+        public static Vector3 RotateVectorFromTo(Quaternion from, Quaternion to, Vector3 vector)
         {
             // Note: comments are in case all inputs are in World Space.
-            Quaternion Q = SubtractRotation (to, from); // Output is in object space.
-            Vector3 A = InverseTransformDirectionMath (from, vector); // Output is in object space.
-            Vector3 B = Q * A; // Output is in local space.
-            Vector3 C = TransformDirectionMath (from, B); // Output is in world space.
+            var Q = SubtractRotation(to, from); // Output is in object space.
+            var A = InverseTransformDirectionMath(from, vector); // Output is in object space.
+            var B = Q * A; // Output is in local space.
+            var C = TransformDirectionMath(from, B); // Output is in world space.
             return C;
         }
 
         /// <summary>
-        /// Find the line of intersection between two planes.	The planes are defined by a normal and a point on that plane.
-        /// The outputs are a point on the line and a vector which indicates it's direction. If the planes are not parallel, 
-        /// the function outputs true, otherwise false.
+        ///     Find the line of intersection between two planes.	The planes are defined by a normal and a point on that plane.
+        ///     The outputs are a point on the line and a vector which indicates it's direction. If the planes are not parallel,
+        ///     the function outputs true, otherwise false.
         /// </summary>
-        public static bool PlanePlaneIntersection (out Vector3 linePoint, out Vector3 lineVec, Vector3 plane1Normal, Vector3 plane1Position, Vector3 plane2Normal, Vector3 plane2Position)
+        public static bool PlanePlaneIntersection(out Vector3 linePoint, out Vector3 lineVec, Vector3 plane1Normal,
+            Vector3 plane1Position, Vector3 plane2Normal, Vector3 plane2Position)
         {
             linePoint = Vector3.zero;
             lineVec = Vector3.zero;
@@ -397,38 +400,37 @@ namespace VG.Extensions
             // We can get the direction of the line of intersection of the two planes by calculating the 
             // cross product of the normals of the two planes. Note that this is just a direction and the line
             // is not fixed in space yet. We need a point for that to go with the line vector.
-            lineVec = Vector3.Cross (plane1Normal, plane2Normal);
+            lineVec = Vector3.Cross(plane1Normal, plane2Normal);
 
             // Next is to calculate a point on the line to fix it's position in space. This is done by finding a vector from
             // the plane2 location, moving parallel to it's plane, and intersecting plane1. To prevent rounding
             // errors, this vector also has to be perpendicular to lineDirection. To get this vector, calculate
             // the cross product of the normal of plane2 and the lineDirection.		
-            Vector3 ldir = Vector3.Cross (plane2Normal, lineVec);
+            var ldir = Vector3.Cross(plane2Normal, lineVec);
 
-            var denominator = Vector3.Dot (plane1Normal, ldir);
+            var denominator = Vector3.Dot(plane1Normal, ldir);
 
             // Prevent divide by zero and rounding errors by requiring about 5 degrees angle between the planes.
-            if (Mathf.Abs (denominator) > 0.006f)
+            if (Mathf.Abs(denominator) > 0.006f)
             {
-                Vector3 plane1ToPlane2 = plane1Position - plane2Position;
-                var t = Vector3.Dot (plane1Normal, plane1ToPlane2) / denominator;
+                var plane1ToPlane2 = plane1Position - plane2Position;
+                var t = Vector3.Dot(plane1Normal, plane1ToPlane2) / denominator;
                 linePoint = plane2Position + t * ldir;
 
                 return true;
             }
 
             // output not valid
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         /// <summary>
-        /// Get the intersection between a line and a plane. 
-        /// If the line and plane are not parallel, the function outputs true, otherwise false.
+        ///     Get the intersection between a line and a plane.
+        ///     If the line and plane are not parallel, the function outputs true, otherwise false.
         /// </summary>
-        public static bool LinePlaneIntersection (out Vector3 intersection, Vector3 linePoint, Vector3 lineVec, Vector3 planeNormal, Vector3 planePoint)
+        public static bool LinePlaneIntersection(out Vector3 intersection, Vector3 linePoint, Vector3 lineVec,
+            Vector3 planeNormal, Vector3 planePoint)
         {
             float length;
             float dotNumerator;
@@ -437,8 +439,8 @@ namespace VG.Extensions
             intersection = Vector3.zero;
 
             // calculate the distance between the linePoint and the line-plane intersection point
-            dotNumerator = Vector3.Dot (planePoint - linePoint, planeNormal);
-            dotDenominator = Vector3.Dot (lineVec, planeNormal);
+            dotNumerator = Vector3.Dot(planePoint - linePoint, planeNormal);
+            dotDenominator = Vector3.Dot(lineVec, planeNormal);
 
             // line and plane are not parallel
             if (dotDenominator != 0.0f)
@@ -446,7 +448,7 @@ namespace VG.Extensions
                 length = dotNumerator / dotDenominator;
 
                 // create a vector from the linePoint to the intersection point
-                vector = SetVectorLength (lineVec, length);
+                vector = SetVectorLength(lineVec, length);
 
                 // get the coordinates of the line-plane intersection point
                 intersection = linePoint + vector;
@@ -455,61 +457,59 @@ namespace VG.Extensions
             }
 
             // output not valid
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         /// <summary>
-        /// Calculate the intersection point of two lines. Returns true if lines intersect, otherwise false.
-        /// Note that in 3d, two lines do not intersect most of the time. So if the two lines are not in the 
-        /// same plane, use ClosestPointsOnTwoLines() instead.
+        ///     Calculate the intersection point of two lines. Returns true if lines intersect, otherwise false.
+        ///     Note that in 3d, two lines do not intersect most of the time. So if the two lines are not in the
+        ///     same plane, use ClosestPointsOnTwoLines() instead.
         /// </summary>
-        public static bool LineLineIntersection (out Vector3 intersection, Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
+        public static bool LineLineIntersection(out Vector3 intersection, Vector3 linePoint1, Vector3 lineVec1,
+            Vector3 linePoint2, Vector3 lineVec2)
         {
-            Vector3 lineVec3 = linePoint2 - linePoint1;
-            Vector3 crossVec1and2 = Vector3.Cross (lineVec1, lineVec2);
-            Vector3 crossVec3and2 = Vector3.Cross (lineVec3, lineVec2);
+            var lineVec3 = linePoint2 - linePoint1;
+            var crossVec1and2 = Vector3.Cross(lineVec1, lineVec2);
+            var crossVec3and2 = Vector3.Cross(lineVec3, lineVec2);
 
-            var planarFactor = Vector3.Dot (lineVec3, crossVec1and2);
+            var planarFactor = Vector3.Dot(lineVec3, crossVec1and2);
 
             // is coplanar, and not parrallel
-            if (Mathf.Abs (planarFactor) < 0.0001f && crossVec1and2.sqrMagnitude > 0.0001f)
+            if (Mathf.Abs(planarFactor) < 0.0001f && crossVec1and2.sqrMagnitude > 0.0001f)
             {
-                var s = Vector3.Dot (crossVec3and2, crossVec1and2) / crossVec1and2.sqrMagnitude;
+                var s = Vector3.Dot(crossVec3and2, crossVec1and2) / crossVec1and2.sqrMagnitude;
                 intersection = linePoint1 + lineVec1 * s;
                 return true;
             }
-            else
-            {
-                intersection = Vector3.zero;
-                return false;
-            }
+
+            intersection = Vector3.zero;
+            return false;
         }
 
         /// <summary>
-        /// Two non-parallel lines which may or may not touch each other have a point on each line which are closest
-        /// to each other. This function finds those two points. If the lines are not parallel, the function 
-        /// outputs true, otherwise false.
+        ///     Two non-parallel lines which may or may not touch each other have a point on each line which are closest
+        ///     to each other. This function finds those two points. If the lines are not parallel, the function
+        ///     outputs true, otherwise false.
         /// </summary>
-        public static bool ClosestPointsOnTwoLines (out Vector3 closestPointLine1, out Vector3 closestPointLine2, Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
+        public static bool ClosestPointsOnTwoLines(out Vector3 closestPointLine1, out Vector3 closestPointLine2,
+            Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
         {
             closestPointLine1 = Vector3.zero;
             closestPointLine2 = Vector3.zero;
 
-            var a = Vector3.Dot (lineVec1, lineVec1);
-            var b = Vector3.Dot (lineVec1, lineVec2);
-            var e = Vector3.Dot (lineVec2, lineVec2);
+            var a = Vector3.Dot(lineVec1, lineVec1);
+            var b = Vector3.Dot(lineVec1, lineVec2);
+            var e = Vector3.Dot(lineVec2, lineVec2);
 
             var d = a * e - b * b;
 
             // lines are not parallel
             if (d != 0.0f)
             {
-                Vector3 r = linePoint1 - linePoint2;
-                var c = Vector3.Dot (lineVec1, r);
-                var f = Vector3.Dot (lineVec2, r);
+                var r = linePoint1 - linePoint2;
+                var c = Vector3.Dot(lineVec1, r);
+                var f = Vector3.Dot(lineVec2, r);
 
                 var s = (b * f - c * e) / d;
                 var t = (a * f - c * b) / d;
@@ -520,284 +520,257 @@ namespace VG.Extensions
                 return true;
             }
 
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         /// <summary>
-        /// This function returns a point which is a projection from a point to a line.
-        /// The line is regarded infinite. If the line is finite, use ProjectPointOnLineSegment() instead.
+        ///     This function returns a point which is a projection from a point to a line.
+        ///     The line is regarded infinite. If the line is finite, use ProjectPointOnLineSegment() instead.
         /// </summary>
-        public static Vector3 ProjectPointOnLine (Vector3 linePoint, Vector3 lineVec, Vector3 point)
+        public static Vector3 ProjectPointOnLine(Vector3 linePoint, Vector3 lineVec, Vector3 point)
         {
             // get vector from point on line to point in space
-            Vector3 linePointToPoint = point - linePoint;
+            var linePointToPoint = point - linePoint;
 
-            var t = Vector3.Dot (linePointToPoint, lineVec);
+            var t = Vector3.Dot(linePointToPoint, lineVec);
 
             return linePoint + lineVec * t;
         }
 
         /// <summary>
-        /// This function returns a point which is a projection from a point to a line segment.
-        /// If the projected point lies outside of the line segment, the projected point will 
-        /// be clamped to the appropriate line edge.
-        /// If the line is infinite instead of a segment, use ProjectPointOnLine() instead.
+        ///     This function returns a point which is a projection from a point to a line segment.
+        ///     If the projected point lies outside of the line segment, the projected point will
+        ///     be clamped to the appropriate line edge.
+        ///     If the line is infinite instead of a segment, use ProjectPointOnLine() instead.
         /// </summary>
-        public static Vector3 ProjectPointOnLineSegment (Vector3 linePoint1, Vector3 linePoint2, Vector3 point)
+        public static Vector3 ProjectPointOnLineSegment(Vector3 linePoint1, Vector3 linePoint2, Vector3 point)
         {
-            Vector3 vector = linePoint2 - linePoint1;
+            var vector = linePoint2 - linePoint1;
 
-            Vector3 projectedPoint = ProjectPointOnLine (linePoint1, vector.normalized, point);
+            var projectedPoint = ProjectPointOnLine(linePoint1, vector.normalized, point);
 
-            var side = PointOnWhichSideOfLineSegment (linePoint1, linePoint2, projectedPoint);
+            var side = PointOnWhichSideOfLineSegment(linePoint1, linePoint2, projectedPoint);
 
             // The projected point is on the line segment
-            if (side == 0)
-            {
-                return projectedPoint;
-            }
+            if (side == 0) return projectedPoint;
 
-            if (side == 1)
-            {
-                return linePoint1;
-            }
+            if (side == 1) return linePoint1;
 
-            if (side == 2)
-            {
-                return linePoint2;
-            }
+            if (side == 2) return linePoint2;
 
             // output is invalid
             return Vector3.zero;
         }
 
         /// <summary>
-        /// This function returns a point which is a projection from a point to a plane.
+        ///     This function returns a point which is a projection from a point to a plane.
         /// </summary>
-        public static Vector3 ProjectPointOnPlane (Vector3 planeNormal, Vector3 planePoint, Vector3 point)
+        public static Vector3 ProjectPointOnPlane(Vector3 planeNormal, Vector3 planePoint, Vector3 point)
         {
             float distance;
             Vector3 translationVector;
 
             // First calculate the distance from the point to the plane:
-            distance = SignedDistancePlanePoint (planeNormal, planePoint, point);
+            distance = SignedDistancePlanePoint(planeNormal, planePoint, point);
 
             // Reverse the sign of the distance
             distance *= -1;
 
             // Get a translation vector
-            translationVector = SetVectorLength (planeNormal, distance);
+            translationVector = SetVectorLength(planeNormal, distance);
 
             // Translate the point to form a projection
             return point + translationVector;
         }
 
         /// <summary>
-        /// Projects a vector onto a plane. The output is not normalized.
+        ///     Projects a vector onto a plane. The output is not normalized.
         /// </summary>
-        public static Vector3 ProjectVectorOnPlane (Vector3 planeNormal, Vector3 vector)
-        {
-            return vector - Vector3.Dot (vector, planeNormal) * planeNormal;
-        }
+        public static Vector3 ProjectVectorOnPlane(Vector3 planeNormal, Vector3 vector) =>
+            vector - Vector3.Dot(vector, planeNormal) * planeNormal;
 
         /// <summary>
-        /// Get the shortest distance between a point and a plane. The output is signed so it holds information
-        /// as to which side of the plane normal the point is.
+        ///     Get the shortest distance between a point and a plane. The output is signed so it holds information
+        ///     as to which side of the plane normal the point is.
         /// </summary>
-        public static float SignedDistancePlanePoint (Vector3 planeNormal, Vector3 planePoint, Vector3 point)
-        {
-            return Vector3.Dot (planeNormal, point - planePoint);
-        }
+        public static float SignedDistancePlanePoint(Vector3 planeNormal, Vector3 planePoint, Vector3 point) =>
+            Vector3.Dot(planeNormal, point - planePoint);
 
         /// <summary>
-        /// This function calculates a signed (+ or - sign instead of being ambiguous) dot product. It is basically used
-        /// to figure out whether a vector is positioned to the left or right of another vector. The way this is done is
-        /// by calculating a vector perpendicular to one of the vectors and using that as a reference. This is because
-        /// the result of a dot product only has signed information when an angle is transitioning between more or less
-        /// than 90 degrees.
+        ///     This function calculates a signed (+ or - sign instead of being ambiguous) dot product. It is basically used
+        ///     to figure out whether a vector is positioned to the left or right of another vector. The way this is done is
+        ///     by calculating a vector perpendicular to one of the vectors and using that as a reference. This is because
+        ///     the result of a dot product only has signed information when an angle is transitioning between more or less
+        ///     than 90 degrees.
         /// </summary>
-        public static float SignedDotProduct (Vector3 vectorA, Vector3 vectorB, Vector3 normal)
+        public static float SignedDotProduct(Vector3 vectorA, Vector3 vectorB, Vector3 normal)
         {
             Vector3 perpVector;
             float dot;
 
             // Use the geometry object normal and one of the input vectors to calculate the perpendicular vector
-            perpVector = Vector3.Cross (normal, vectorA);
+            perpVector = Vector3.Cross(normal, vectorA);
 
             // Now calculate the dot product between the perpendicular vector (perpVector) and the other input vector
-            dot = Vector3.Dot (perpVector, vectorB);
+            dot = Vector3.Dot(perpVector, vectorB);
 
             return dot;
         }
 
-        public static float SignedVectorAngle (Vector3 referenceVector, Vector3 otherVector, Vector3 normal)
+        public static float SignedVectorAngle(Vector3 referenceVector, Vector3 otherVector, Vector3 normal)
         {
             Vector3 perpVector;
             float angle;
 
             // Use the geometry object normal and one of the input vectors to calculate the perpendicular vector
-            perpVector = Vector3.Cross (normal, referenceVector);
+            perpVector = Vector3.Cross(normal, referenceVector);
 
             // Now calculate the dot product between the perpendicular vector (perpVector) and the other input vector
-            angle = Vector3.Angle (referenceVector, otherVector);
-            angle *= Mathf.Sign (Vector3.Dot (perpVector, otherVector));
+            angle = Vector3.Angle(referenceVector, otherVector);
+            angle *= Mathf.Sign(Vector3.Dot(perpVector, otherVector));
 
             return angle;
         }
 
         /// <summary>
-        /// Calculate the angle between a vector and a plane. The plane is made by a normal vector.
-        /// Output is in radians.
+        ///     Calculate the angle between a vector and a plane. The plane is made by a normal vector.
+        ///     Output is in radians.
         /// </summary>
-        public static float AngleVectorPlane (Vector3 vector, Vector3 normal)
+        public static float AngleVectorPlane(Vector3 vector, Vector3 normal)
         {
             float dot;
             float angle;
 
             // calculate the the dot product between the two input vectors. This gives the cosine between the two vectors
-            dot = Vector3.Dot (vector, normal);
+            dot = Vector3.Dot(vector, normal);
 
             // this is in radians
-            angle = (float) Math.Acos (dot);
+            angle = (float)Math.Acos(dot);
 
             return 1.570796326794897f - angle; // 90 degrees - angle
         }
 
         /// <summary>
-        /// Calculate the dot product as an angle
+        ///     Calculate the dot product as an angle
         /// </summary>
-        public static float DotProductAngle (Vector3 vec1, Vector3 vec2)
+        public static float DotProductAngle(Vector3 vec1, Vector3 vec2)
         {
             double dot;
             double angle;
 
             // get the dot product
-            dot = Vector3.Dot (vec1, vec2);
+            dot = Vector3.Dot(vec1, vec2);
 
             // Clamp to prevent NaN error. Shouldn't need this in the first place, but there could be a rounding error issue.
-            if (dot < -1.0f)
-            {
-                dot = -1.0f;
-            }
-            if (dot > 1.0f)
-            {
-                dot = 1.0f;
-            }
+            if (dot < -1.0f) dot = -1.0f;
+            if (dot > 1.0f) dot = 1.0f;
 
             // Calculate the angle. The output is in radians
             // This step can be skipped for optimization...
-            angle = Math.Acos (dot);
+            angle = Math.Acos(dot);
 
-            return (float) angle;
+            return (float)angle;
         }
 
         /// <summary>
-        /// Convert a plane defined by 3 points to a plane defined by a vector and a point. 
-        /// The plane point is the middle of the triangle defined by the 3 points.
+        ///     Convert a plane defined by 3 points to a plane defined by a vector and a point.
+        ///     The plane point is the middle of the triangle defined by the 3 points.
         /// </summary>
-        public static void PlaneFrom3Points (out Vector3 planeNormal, out Vector3 planePoint, Vector3 pointA, Vector3 pointB, Vector3 pointC)
+        public static void PlaneFrom3Points(out Vector3 planeNormal, out Vector3 planePoint, Vector3 pointA,
+            Vector3 pointB, Vector3 pointC)
         {
             planeNormal = Vector3.zero;
             planePoint = Vector3.zero;
 
             // Make two vectors from the 3 input points, originating from point A
-            Vector3 AB = pointB - pointA;
-            Vector3 AC = pointC - pointA;
+            var AB = pointB - pointA;
+            var AC = pointC - pointA;
 
             // Calculate the normal
-            planeNormal = Vector3.Normalize (Vector3.Cross (AB, AC));
+            planeNormal = Vector3.Normalize(Vector3.Cross(AB, AC));
 
             // Get the points in the middle AB and AC
-            Vector3 middleAB = pointA + AB / 2.0f;
-            Vector3 middleAC = pointA + AC / 2.0f;
+            var middleAB = pointA + AB / 2.0f;
+            var middleAC = pointA + AC / 2.0f;
 
             // Get vectors from the middle of AB and AC to the point which is not on that line.
-            Vector3 middleABtoC = pointC - middleAB;
-            Vector3 middleACtoB = pointB - middleAC;
+            var middleABtoC = pointC - middleAB;
+            var middleACtoB = pointB - middleAC;
 
             // Calculate the intersection between the two lines. This will be the center 
             // of the triangle defined by the 3 points.
             // We could use LineLineIntersection instead of ClosestPointsOnTwoLines but due to rounding errors 
             // this sometimes doesn't work.
             Vector3 temp;
-            ClosestPointsOnTwoLines (out planePoint, out temp, middleAB, middleABtoC, middleAC, middleACtoB);
+            ClosestPointsOnTwoLines(out planePoint, out temp, middleAB, middleABtoC, middleAC, middleACtoB);
         }
 
         /// <summary>
-        /// Returns the forward vector of a quaternion
+        ///     Returns the forward vector of a quaternion
         /// </summary>
-        public static Vector3 GetForwardVector (Quaternion q)
+        public static Vector3 GetForwardVector(Quaternion q) => q * Vector3.forward;
+
+        /// <summary>
+        ///     Returns the up vector of a quaternion
+        /// </summary>
+        public static Vector3 GetUpVector(Quaternion q) => q * Vector3.up;
+
+        /// <summary>
+        ///     Returns the right vector of a quaternion
+        /// </summary>
+        public static Vector3 GetRightVector(Quaternion q) => q * Vector3.right;
+
+        /// <summary>
+        ///     Gets a quaternion from a matrix
+        /// </summary>
+        public static Quaternion QuaternionFromMatrix(Matrix4x4 m) =>
+            Quaternion.LookRotation(m.GetColumn(2), m.GetColumn(1));
+
+        /// <summary>
+        ///     Gets a position from a matrix
+        /// </summary>
+        public static Vector3 PositionFromMatrix(Matrix4x4 m)
         {
-            return q * Vector3.forward;
+            var vector4Position = m.GetColumn(3);
+            return new Vector3(vector4Position.x, vector4Position.y, vector4Position.z);
         }
 
         /// <summary>
-        /// Returns the up vector of a quaternion
+        ///     This is an alternative for Quaternion.LookRotation. Instead of aligning the forward and up vector of the game
+        ///     object with the input vectors, a custom direction can be used instead of the fixed forward and up vectors.
+        ///     alignWithVector and alignWithNormal are in world space.
+        ///     customForward and customUp are in object space.
+        ///     Usage: use alignWithVector and alignWithNormal as if you are using the default LookRotation function.
+        ///     Set customForward and customUp to the vectors you wish to use instead of the default forward and up vectors.
         /// </summary>
-        public static Vector3 GetUpVector (Quaternion q)
-        {
-            return q * Vector3.up;
-        }
-
-        /// <summary>
-        /// Returns the right vector of a quaternion
-        /// </summary>
-        public static Vector3 GetRightVector (Quaternion q)
-        {
-            return q * Vector3.right;
-        }
-
-        /// <summary>
-        /// Gets a quaternion from a matrix
-        /// </summary>
-        public static Quaternion QuaternionFromMatrix (Matrix4x4 m)
-        {
-            return Quaternion.LookRotation (m.GetColumn (2), m.GetColumn (1));
-        }
-
-        /// <summary>
-        /// Gets a position from a matrix
-        /// </summary>
-        public static Vector3 PositionFromMatrix (Matrix4x4 m)
-        {
-            Vector4 vector4Position = m.GetColumn (3);
-            return new Vector3 (vector4Position.x, vector4Position.y, vector4Position.z);
-        }
-
-        /// <summary>
-        /// This is an alternative for Quaternion.LookRotation. Instead of aligning the forward and up vector of the game 
-        /// object with the input vectors, a custom direction can be used instead of the fixed forward and up vectors.
-        /// alignWithVector and alignWithNormal are in world space.
-        /// customForward and customUp are in object space.
-        /// Usage: use alignWithVector and alignWithNormal as if you are using the default LookRotation function.
-        /// Set customForward and customUp to the vectors you wish to use instead of the default forward and up vectors.
-        /// </summary>
-        public static void LookRotationExtended (ref GameObject gameObjectInOut, Vector3 alignWithVector, Vector3 alignWithNormal, Vector3 customForward, Vector3 customUp)
+        public static void LookRotationExtended(ref GameObject gameObjectInOut, Vector3 alignWithVector,
+            Vector3 alignWithNormal, Vector3 customForward, Vector3 customUp)
         {
             // Set the rotation of the destination
-            Quaternion rotationA = Quaternion.LookRotation (alignWithVector, alignWithNormal);
+            var rotationA = Quaternion.LookRotation(alignWithVector, alignWithNormal);
 
             // Set the rotation of the custom normal and up vectors. 
             // When using the default LookRotation function, this would be hard coded to the forward and up vector.
-            Quaternion rotationB = Quaternion.LookRotation (customForward, customUp);
+            var rotationB = Quaternion.LookRotation(customForward, customUp);
 
             // Calculate the rotation
-            gameObjectInOut.transform.rotation = rotationA * Quaternion.Inverse (rotationB);
+            gameObjectInOut.transform.rotation = rotationA * Quaternion.Inverse(rotationB);
         }
 
         /// <summary>
-        /// This function transforms one object as if it was parented to the other.
-        /// Before using this function, the Init() function must be called
-        /// Input: parentRotation and parentPosition: the current parent transform.
-        /// Input: startParentRotation and startParentPosition: the transform of the parent object at the time the objects are parented.
-        /// Input: startChildRotation and startChildPosition: the transform of the child object at the time the objects are parented.
-        /// Output: childRotation and childPosition.
-        /// All transforms are in world space.
+        ///     This function transforms one object as if it was parented to the other.
+        ///     Before using this function, the Init() function must be called
+        ///     Input: parentRotation and parentPosition: the current parent transform.
+        ///     Input: startParentRotation and startParentPosition: the transform of the parent object at the time the objects are
+        ///     parented.
+        ///     Input: startChildRotation and startChildPosition: the transform of the child object at the time the objects are
+        ///     parented.
+        ///     Output: childRotation and childPosition.
+        ///     All transforms are in world space.
         /// </summary>
-        public static void TransformWithParent (out Quaternion childRotation, out Vector3 childPosition, Quaternion parentRotation, Vector3 parentPosition, Quaternion startParentRotation, Vector3 startParentPosition, Quaternion startChildRotation, Vector3 startChildPosition)
+        public static void TransformWithParent(out Quaternion childRotation, out Vector3 childPosition,
+            Quaternion parentRotation, Vector3 parentPosition, Quaternion startParentRotation,
+            Vector3 startParentPosition, Quaternion startChildRotation, Vector3 startChildPosition)
         {
             childRotation = Quaternion.identity;
             childPosition = Vector3.zero;
@@ -822,153 +795,146 @@ namespace VG.Extensions
         }
 
         /// <summary>
-        /// With this function you can align a triangle of an object with any transform.
-        /// Usage: gameObjectInOut is the game object you want to transform.
-        /// alignWithVector, alignWithNormal, and alignWithPosition is the transform with which the triangle of the object should be aligned with.
-        /// triangleForward, triangleNormal, and trianglePosition is the transform of the triangle from the object.
-        /// alignWithVector, alignWithNormal, and alignWithPosition are in world space.
-        /// triangleForward, triangleNormal, and trianglePosition are in object space.
-        /// trianglePosition is the mesh position of the triangle. The effect of the scale of the object is handled automatically.
-        /// trianglePosition can be set at any position, it does not have to be at a vertex or in the middle of the triangle.
+        ///     With this function you can align a triangle of an object with any transform.
+        ///     Usage: gameObjectInOut is the game object you want to transform.
+        ///     alignWithVector, alignWithNormal, and alignWithPosition is the transform with which the triangle of the object
+        ///     should be aligned with.
+        ///     triangleForward, triangleNormal, and trianglePosition is the transform of the triangle from the object.
+        ///     alignWithVector, alignWithNormal, and alignWithPosition are in world space.
+        ///     triangleForward, triangleNormal, and trianglePosition are in object space.
+        ///     trianglePosition is the mesh position of the triangle. The effect of the scale of the object is handled
+        ///     automatically.
+        ///     trianglePosition can be set at any position, it does not have to be at a vertex or in the middle of the triangle.
         /// </summary>
-        public static void PreciseAlign (ref GameObject gameObjectInOut, Vector3 alignWithVector, Vector3 alignWithNormal, Vector3 alignWithPosition, Vector3 triangleForward, Vector3 triangleNormal, Vector3 trianglePosition)
+        public static void PreciseAlign(ref GameObject gameObjectInOut, Vector3 alignWithVector,
+            Vector3 alignWithNormal, Vector3 alignWithPosition, Vector3 triangleForward, Vector3 triangleNormal,
+            Vector3 trianglePosition)
         {
             // Set the rotation.
-            LookRotationExtended (ref gameObjectInOut, alignWithVector, alignWithNormal, triangleForward, triangleNormal);
+            LookRotationExtended(ref gameObjectInOut, alignWithVector, alignWithNormal, triangleForward,
+                triangleNormal);
 
             // Get the world space position of trianglePosition
-            Vector3 trianglePositionWorld = gameObjectInOut.transform.TransformPoint (trianglePosition);
+            var trianglePositionWorld = gameObjectInOut.transform.TransformPoint(trianglePosition);
 
             // Get a vector from trianglePosition to alignWithPosition
-            Vector3 translateVector = alignWithPosition - trianglePositionWorld;
+            var translateVector = alignWithPosition - trianglePositionWorld;
 
             // Now transform the object so the triangle lines up correctly.
-            gameObjectInOut.transform.Translate (translateVector, Space.World);
+            gameObjectInOut.transform.Translate(translateVector, Space.World);
         }
 
         /// <summary>
-        /// Convert a position, direction, and normal vector to a transform
+        ///     Convert a position, direction, and normal vector to a transform
         /// </summary>
-        public static void VectorsToTransform (ref GameObject gameObjectInOut, Vector3 positionVector, Vector3 directionVector, Vector3 normalVector)
+        public static void VectorsToTransform(ref GameObject gameObjectInOut, Vector3 positionVector,
+            Vector3 directionVector, Vector3 normalVector)
         {
             gameObjectInOut.transform.position = positionVector;
-            gameObjectInOut.transform.rotation = Quaternion.LookRotation (directionVector, normalVector);
+            gameObjectInOut.transform.rotation = Quaternion.LookRotation(directionVector, normalVector);
         }
 
         /// <summary>
-        /// This function finds out on which side of a line segment the point is located.
-        /// The point is assumed to be on a line created by linePoint1 and linePoint2. If the point is not on
-        /// the line segment, project it on the line using ProjectPointOnLine() first.
-        /// Returns 0 if point is on the line segment.
-        /// Returns 1 if point is outside of the line segment and located on the side of linePoint1.
-        /// Returns 2 if point is outside of the line segment and located on the side of linePoint2.
+        ///     This function finds out on which side of a line segment the point is located.
+        ///     The point is assumed to be on a line created by linePoint1 and linePoint2. If the point is not on
+        ///     the line segment, project it on the line using ProjectPointOnLine() first.
+        ///     Returns 0 if point is on the line segment.
+        ///     Returns 1 if point is outside of the line segment and located on the side of linePoint1.
+        ///     Returns 2 if point is outside of the line segment and located on the side of linePoint2.
         /// </summary>
-        public static int PointOnWhichSideOfLineSegment (Vector3 linePoint1, Vector3 linePoint2, Vector3 point)
+        public static int PointOnWhichSideOfLineSegment(Vector3 linePoint1, Vector3 linePoint2, Vector3 point)
         {
-            Vector3 lineVec = linePoint2 - linePoint1;
-            Vector3 pointVec = point - linePoint1;
+            var lineVec = linePoint2 - linePoint1;
+            var pointVec = point - linePoint1;
 
-            var dot = Vector3.Dot (pointVec, lineVec);
+            var dot = Vector3.Dot(pointVec, lineVec);
 
             // point is on side of linePoint2, compared to linePoint1
             if (dot > 0)
             {
                 // point is on the line segment
                 if (pointVec.magnitude <= lineVec.magnitude)
-                {
                     return 0;
-                }
 
                 // point is not on the line segment and it is on the side of linePoint2
-                else
-                {
-                    return 2;
-                }
+                return 2;
             }
 
             // Point is not on side of linePoint2, compared to linePoint1.
             // Point is not on the line segment and it is on the side of linePoint1.
-            else
-            {
-                return 1;
-            }
+
+            return 1;
         }
 
         /// <summary>
-        /// Returns the pixel distance from the mouse pointer to a line.
-        /// Alternative for HandleUtility.DistanceToLine(). Works both in Editor mode and Play mode.
-        /// Do not call this function from OnGUI() as the mouse position will be wrong.
+        ///     Returns the pixel distance from the mouse pointer to a line.
+        ///     Alternative for HandleUtility.DistanceToLine(). Works both in Editor mode and Play mode.
+        ///     Do not call this function from OnGUI() as the mouse position will be wrong.
         /// </summary>
-        public static float MouseDistanceToLine (Vector3 linePoint1, Vector3 linePoint2)
+        public static float MouseDistanceToLine(Vector3 linePoint1, Vector3 linePoint2)
         {
             Camera currentCamera;
             Vector3 mousePosition;
 
 #if UNITY_EDITOR
             if (Camera.current != null)
-            {
                 currentCamera = Camera.current;
-            }
 
             else
-            {
                 currentCamera = Camera.main;
-            }
 
             // convert format because y is flipped
-            mousePosition = new Vector3 (Event.current.mousePosition.x, currentCamera.pixelHeight - Event.current.mousePosition.y, 0f);
+            mousePosition = new Vector3(Event.current.mousePosition.x,
+                currentCamera.pixelHeight - Event.current.mousePosition.y, 0f);
 
 #else
 		currentCamera = Camera.main;
 		mousePosition = Input.mousePosition;
 #endif
 
-            Vector3 screenPos1 = currentCamera.WorldToScreenPoint (linePoint1);
-            Vector3 screenPos2 = currentCamera.WorldToScreenPoint (linePoint2);
-            Vector3 projectedPoint = ProjectPointOnLineSegment (screenPos1, screenPos2, mousePosition);
+            var screenPos1 = currentCamera.WorldToScreenPoint(linePoint1);
+            var screenPos2 = currentCamera.WorldToScreenPoint(linePoint2);
+            var projectedPoint = ProjectPointOnLineSegment(screenPos1, screenPos2, mousePosition);
 
             // set z to zero
-            projectedPoint = new Vector3 (projectedPoint.x, projectedPoint.y, 0f);
+            projectedPoint = new Vector3(projectedPoint.x, projectedPoint.y, 0f);
 
-            Vector3 vector = projectedPoint - mousePosition;
+            var vector = projectedPoint - mousePosition;
             return vector.magnitude;
         }
 
         /// <summary>
-        /// Returns the pixel distance from the mouse pointer to a camera facing circle.
-        /// Alternative for HandleUtility.DistanceToCircle(). Works both in Editor mode and Play mode.
-        /// Do not call this function from OnGUI() as the mouse position will be wrong.
-        /// If you want the distance to a point instead of a circle, set the radius to 0.
+        ///     Returns the pixel distance from the mouse pointer to a camera facing circle.
+        ///     Alternative for HandleUtility.DistanceToCircle(). Works both in Editor mode and Play mode.
+        ///     Do not call this function from OnGUI() as the mouse position will be wrong.
+        ///     If you want the distance to a point instead of a circle, set the radius to 0.
         /// </summary>
-        public static float MouseDistanceToCircle (Vector3 point, float radius)
+        public static float MouseDistanceToCircle(Vector3 point, float radius)
         {
             Camera currentCamera;
             Vector3 mousePosition;
 
 #if UNITY_EDITOR
             if (Camera.current != null)
-            {
                 currentCamera = Camera.current;
-            }
 
             else
-            {
                 currentCamera = Camera.main;
-            }
 
             // convert format because y is flipped
-            mousePosition = new Vector3 (Event.current.mousePosition.x, currentCamera.pixelHeight - Event.current.mousePosition.y, 0f);
+            mousePosition = new Vector3(Event.current.mousePosition.x,
+                currentCamera.pixelHeight - Event.current.mousePosition.y, 0f);
 #else
 		currentCamera = Camera.main;
 		mousePosition = Input.mousePosition;
 #endif
 
-            Vector3 screenPos = currentCamera.WorldToScreenPoint (point);
+            var screenPos = currentCamera.WorldToScreenPoint(point);
 
             // set z to zero
-            screenPos = new Vector3 (screenPos.x, screenPos.y, 0f);
+            screenPos = new Vector3(screenPos.x, screenPos.y, 0f);
 
-            Vector3 vector = screenPos - mousePosition;
+            var vector = screenPos - mousePosition;
             var fullDistance = vector.magnitude;
             var circleDistance = fullDistance - radius;
 
@@ -976,52 +942,42 @@ namespace VG.Extensions
         }
 
         /// <summary>
-        /// Returns true if a line segment (made up of linePoint1 and linePoint2) is fully or partially in a rectangle
-        /// made up of RectA to RectD. The line segment is assumed to be on the same plane as the rectangle. If the line is 
-        /// not on the plane, use ProjectPointOnPlane() on linePoint1 and linePoint2 first.
+        ///     Returns true if a line segment (made up of linePoint1 and linePoint2) is fully or partially in a rectangle
+        ///     made up of RectA to RectD. The line segment is assumed to be on the same plane as the rectangle. If the line is
+        ///     not on the plane, use ProjectPointOnPlane() on linePoint1 and linePoint2 first.
         /// </summary>
-        public static bool IsLineInRectangle (Vector3 linePoint1, Vector3 linePoint2, Vector3 rectA, Vector3 rectB, Vector3 rectC, Vector3 rectD)
+        public static bool IsLineInRectangle(Vector3 linePoint1, Vector3 linePoint2, Vector3 rectA, Vector3 rectB,
+            Vector3 rectC, Vector3 rectD)
         {
             var pointAInside = false;
             var pointBInside = false;
 
-            pointAInside = IsPointInRectangle (linePoint1, rectA, rectC, rectB, rectD);
+            pointAInside = IsPointInRectangle(linePoint1, rectA, rectC, rectB, rectD);
 
-            if (!pointAInside)
-            {
-                pointBInside = IsPointInRectangle (linePoint2, rectA, rectC, rectB, rectD);
-            }
+            if (!pointAInside) pointBInside = IsPointInRectangle(linePoint2, rectA, rectC, rectB, rectD);
 
             // none of the points are inside, so check if a line is crossing
             if (!pointAInside && !pointBInside)
             {
-                var lineACrossing = AreLineSegmentsCrossing (linePoint1, linePoint2, rectA, rectB);
-                var lineBCrossing = AreLineSegmentsCrossing (linePoint1, linePoint2, rectB, rectC);
-                var lineCCrossing = AreLineSegmentsCrossing (linePoint1, linePoint2, rectC, rectD);
-                var lineDCrossing = AreLineSegmentsCrossing (linePoint1, linePoint2, rectD, rectA);
+                var lineACrossing = AreLineSegmentsCrossing(linePoint1, linePoint2, rectA, rectB);
+                var lineBCrossing = AreLineSegmentsCrossing(linePoint1, linePoint2, rectB, rectC);
+                var lineCCrossing = AreLineSegmentsCrossing(linePoint1, linePoint2, rectC, rectD);
+                var lineDCrossing = AreLineSegmentsCrossing(linePoint1, linePoint2, rectD, rectA);
 
                 if (lineACrossing || lineBCrossing || lineCCrossing || lineDCrossing)
-                {
                     return true;
-                }
 
-                else
-                {
-                    return false;
-                }
+                return false;
             }
 
-            else
-            {
-                return true;
-            }
+            return true;
         }
 
         /// <summary>
-        /// Returns true if "point" is in a rectangle mad up of RectA to RectD. The line point is assumed to be on the same 
-        /// plane as the rectangle. If the point is not on the plane, use ProjectPointOnPlane() first.
+        ///     Returns true if "point" is in a rectangle mad up of RectA to RectD. The line point is assumed to be on the same
+        ///     plane as the rectangle. If the point is not on the plane, use ProjectPointOnPlane() first.
         /// </summary>
-        public static bool IsPointInRectangle (Vector3 point, Vector3 rectA, Vector3 rectC, Vector3 rectB, Vector3 rectD)
+        public static bool IsPointInRectangle(Vector3 point, Vector3 rectA, Vector3 rectC, Vector3 rectB, Vector3 rectD)
         {
             Vector3 vector;
             Vector3 linePoint;
@@ -1029,86 +985,75 @@ namespace VG.Extensions
             // get the center of the rectangle
             vector = rectC - rectA;
             var size = -(vector.magnitude / 2f);
-            vector = AddVectorLength (vector, size);
-            Vector3 middle = rectA + vector;
+            vector = AddVectorLength(vector, size);
+            var middle = rectA + vector;
 
-            Vector3 xVector = rectB - rectA;
+            var xVector = rectB - rectA;
             var width = xVector.magnitude / 2f;
 
-            Vector3 yVector = rectD - rectA;
+            var yVector = rectD - rectA;
             var height = yVector.magnitude / 2f;
 
-            linePoint = ProjectPointOnLine (middle, xVector.normalized, point);
+            linePoint = ProjectPointOnLine(middle, xVector.normalized, point);
             vector = linePoint - point;
             var yDistance = vector.magnitude;
 
-            linePoint = ProjectPointOnLine (middle, yVector.normalized, point);
+            linePoint = ProjectPointOnLine(middle, yVector.normalized, point);
             vector = linePoint - point;
             var xDistance = vector.magnitude;
 
             if (xDistance <= width && yDistance <= height)
-            {
                 return true;
-            }
 
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         /// <summary>
-        /// Returns true if line segment made up of pointA1 and pointA2 is crossing line segment made up of
-        /// pointB1 and pointB2. The two lines are assumed to be in the same plane.
+        ///     Returns true if line segment made up of pointA1 and pointA2 is crossing line segment made up of
+        ///     pointB1 and pointB2. The two lines are assumed to be in the same plane.
         /// </summary>
-        public static bool AreLineSegmentsCrossing (Vector3 pointA1, Vector3 pointA2, Vector3 pointB1, Vector3 pointB2)
+        public static bool AreLineSegmentsCrossing(Vector3 pointA1, Vector3 pointA2, Vector3 pointB1, Vector3 pointB2)
         {
             Vector3 closestPointA;
             Vector3 closestPointB;
             int sideA;
             int sideB;
 
-            Vector3 lineVecA = pointA2 - pointA1;
-            Vector3 lineVecB = pointB2 - pointB1;
+            var lineVecA = pointA2 - pointA1;
+            var lineVecB = pointB2 - pointB1;
 
-            var valid = ClosestPointsOnTwoLines (out closestPointA, out closestPointB, pointA1, lineVecA.normalized, pointB1, lineVecB.normalized);
+            var valid = ClosestPointsOnTwoLines(out closestPointA, out closestPointB, pointA1, lineVecA.normalized,
+                pointB1, lineVecB.normalized);
 
             // lines are not parallel
             if (valid)
             {
-                sideA = PointOnWhichSideOfLineSegment (pointA1, pointA2, closestPointA);
-                sideB = PointOnWhichSideOfLineSegment (pointB1, pointB2, closestPointB);
+                sideA = PointOnWhichSideOfLineSegment(pointA1, pointA2, closestPointA);
+                sideB = PointOnWhichSideOfLineSegment(pointB1, pointB2, closestPointB);
 
                 if (sideA == 0 && sideB == 0)
-                {
                     return true;
-                }
 
-                else
-                {
-                    return false;
-                }
+                return false;
             }
 
             // lines are parallel
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         /// <summary>
-        /// This function calculates the acceleration vector in meter/second^2.
-        /// Input: position. If the output is used for motion simulation, the input transform
-        /// has to be located at the seat base, not at the vehicle CG. Attach an empty GameObject
-        /// at the correct location and use that as the input for this function.
-        /// Gravity is not taken into account but this can be added to the output if needed.
-        /// A low number of samples can give a jittery result due to rounding errors.
-        /// If more samples are used, the output is more smooth but has a higher latency.
+        ///     This function calculates the acceleration vector in meter/second^2.
+        ///     Input: position. If the output is used for motion simulation, the input transform
+        ///     has to be located at the seat base, not at the vehicle CG. Attach an empty GameObject
+        ///     at the correct location and use that as the input for this function.
+        ///     Gravity is not taken into account but this can be added to the output if needed.
+        ///     A low number of samples can give a jittery result due to rounding errors.
+        ///     If more samples are used, the output is more smooth but has a higher latency.
         /// </summary>
-        public static bool LinearAcceleration (out Vector3 vector, Vector3 position, int samples)
+        public static bool LinearAcceleration(out Vector3 vector, Vector3 position, int samples)
         {
-            Vector3 averageSpeedChange = Vector3.zero;
+            var averageSpeedChange = Vector3.zero;
             vector = Vector3.zero;
             Vector3 deltaDistance;
             float deltaTime;
@@ -1117,10 +1062,7 @@ namespace VG.Extensions
 
             // Clamp sample amount. In order to calculate acceleration we need at least 2 changes
             // in speed, so we need at least 3 position samples.
-            if (samples < 3)
-            {
-                samples = 3;
-            }
+            if (samples < 3) samples = 3;
 
             // Initialize
             if (positionRegister == null)
@@ -1137,8 +1079,9 @@ namespace VG.Extensions
                 positionRegister[i] = positionRegister[i + 1];
                 posTimeRegister[i] = posTimeRegister[i + 1];
             }
+
             positionRegister[positionRegister.Length - 1] = position;
-            posTimeRegister[posTimeRegister.Length - 1] = UnityEngine.Time.time;
+            posTimeRegister[posTimeRegister.Length - 1] = Time.time;
 
             positionSamplesTaken++;
 
@@ -1152,19 +1095,13 @@ namespace VG.Extensions
                     deltaTime = posTimeRegister[i + 1] - posTimeRegister[i];
 
                     // If deltaTime is 0, the output is invalid.
-                    if (deltaTime == 0)
-                    {
-                        return false;
-                    }
+                    if (deltaTime == 0) return false;
 
                     speedA = deltaDistance / deltaTime;
                     deltaDistance = positionRegister[i + 2] - positionRegister[i + 1];
                     deltaTime = posTimeRegister[i + 2] - posTimeRegister[i + 1];
 
-                    if (deltaTime == 0)
-                    {
-                        return false;
-                    }
+                    if (deltaTime == 0) return false;
 
                     speedB = deltaDistance / deltaTime;
 
@@ -1184,40 +1121,38 @@ namespace VG.Extensions
                 return true;
             }
 
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         /// <summary>
-        /// This function calculates angular acceleration in object space as deg/second^2, encoded as a vector. 
-        /// For example, if the output vector is 0,0,-5, the angular acceleration is 5 deg/second^2 around the object Z axis, to the left. 
-        /// Input: rotation (quaternion). If the output is used for motion simulation, the input transform
-        /// has to be located at the seat base, not at the vehicle CG. Attach an empty GameObject
-        /// at the correct location and use that as the input for this function.
-        /// A low number of samples can give a jittery result due to rounding errors.
-        /// If more samples are used, the output is more smooth but has a higher latency.
-        /// Note: the result is only accurate if the rotational difference between two samples is less than 180 degrees.
-        /// Note: a suitable way to visualize the result is:
-        /// Vector3 dir;
-        /// float scale = 2f;	
-        /// dir = new Vector3(vector.x, 0, 0);
-        /// dir = Math3d.SetVectorLength(dir, dir.magnitude * scale);
-        /// dir = gameObject.transform.TransformDirection(dir);
-        /// Debug.DrawRay(gameObject.transform.position, dir, Color.red);	
-        /// dir = new Vector3(0, vector.y, 0);
-        /// dir = Math3d.SetVectorLength(dir, dir.magnitude * scale);
-        /// dir = gameObject.transform.TransformDirection(dir);
-        /// Debug.DrawRay(gameObject.transform.position, dir, Color.green);	
-        /// dir = new Vector3(0, 0, vector.z);
-        /// dir = Math3d.SetVectorLength(dir, dir.magnitude * scale);
-        /// dir = gameObject.transform.TransformDirection(dir);
-        /// Debug.DrawRay(gameObject.transform.position, dir, Color.blue);	
+        ///     This function calculates angular acceleration in object space as deg/second^2, encoded as a vector.
+        ///     For example, if the output vector is 0,0,-5, the angular acceleration is 5 deg/second^2 around the object Z axis,
+        ///     to the left.
+        ///     Input: rotation (quaternion). If the output is used for motion simulation, the input transform
+        ///     has to be located at the seat base, not at the vehicle CG. Attach an empty GameObject
+        ///     at the correct location and use that as the input for this function.
+        ///     A low number of samples can give a jittery result due to rounding errors.
+        ///     If more samples are used, the output is more smooth but has a higher latency.
+        ///     Note: the result is only accurate if the rotational difference between two samples is less than 180 degrees.
+        ///     Note: a suitable way to visualize the result is:
+        ///     Vector3 dir;
+        ///     float scale = 2f;
+        ///     dir = new Vector3(vector.x, 0, 0);
+        ///     dir = Math3d.SetVectorLength(dir, dir.magnitude * scale);
+        ///     dir = gameObject.transform.TransformDirection(dir);
+        ///     Debug.DrawRay(gameObject.transform.position, dir, Color.red);
+        ///     dir = new Vector3(0, vector.y, 0);
+        ///     dir = Math3d.SetVectorLength(dir, dir.magnitude * scale);
+        ///     dir = gameObject.transform.TransformDirection(dir);
+        ///     Debug.DrawRay(gameObject.transform.position, dir, Color.green);
+        ///     dir = new Vector3(0, 0, vector.z);
+        ///     dir = Math3d.SetVectorLength(dir, dir.magnitude * scale);
+        ///     dir = gameObject.transform.TransformDirection(dir);
+        ///     Debug.DrawRay(gameObject.transform.position, dir, Color.blue);
         /// </summary>
-        public static bool AngularAcceleration (out Vector3 vector, Quaternion rotation, int samples)
+        public static bool AngularAcceleration(out Vector3 vector, Quaternion rotation, int samples)
         {
-            Vector3 averageSpeedChange = Vector3.zero;
+            var averageSpeedChange = Vector3.zero;
             vector = Vector3.zero;
             Quaternion deltaRotation;
             float deltaTime;
@@ -1226,10 +1161,7 @@ namespace VG.Extensions
 
             // Clamp sample amount. In order to calculate acceleration we need at least 2 changes
             // in speed, so we need at least 3 rotation samples.
-            if (samples < 3)
-            {
-                samples = 3;
-            }
+            if (samples < 3) samples = 3;
 
             // Initialize
             if (rotationRegister == null)
@@ -1246,8 +1178,9 @@ namespace VG.Extensions
                 rotationRegister[i] = rotationRegister[i + 1];
                 rotTimeRegister[i] = rotTimeRegister[i + 1];
             }
+
             rotationRegister[rotationRegister.Length - 1] = rotation;
-            rotTimeRegister[rotTimeRegister.Length - 1] = UnityEngine.Time.time;
+            rotTimeRegister[rotTimeRegister.Length - 1] = Time.time;
 
             rotationSamplesTaken++;
 
@@ -1257,25 +1190,19 @@ namespace VG.Extensions
                 // Calculate average speed change.
                 for (var i = 0; i < rotationRegister.Length - 2; i++)
                 {
-                    deltaRotation = SubtractRotation (rotationRegister[i + 1], rotationRegister[i]);
+                    deltaRotation = SubtractRotation(rotationRegister[i + 1], rotationRegister[i]);
                     deltaTime = rotTimeRegister[i + 1] - rotTimeRegister[i];
 
                     // If deltaTime is 0, the output is invalid.
-                    if (deltaTime == 0)
-                    {
-                        return false;
-                    }
+                    if (deltaTime == 0) return false;
 
-                    speedA = RotDiffToSpeedVec (deltaRotation, deltaTime);
-                    deltaRotation = SubtractRotation (rotationRegister[i + 2], rotationRegister[i + 1]);
+                    speedA = RotDiffToSpeedVec(deltaRotation, deltaTime);
+                    deltaRotation = SubtractRotation(rotationRegister[i + 2], rotationRegister[i + 1]);
                     deltaTime = rotTimeRegister[i + 2] - rotTimeRegister[i + 1];
 
-                    if (deltaTime == 0)
-                    {
-                        return false;
-                    }
+                    if (deltaTime == 0) return false;
 
-                    speedB = RotDiffToSpeedVec (deltaRotation, deltaTime);
+                    speedB = RotDiffToSpeedVec(deltaRotation, deltaTime);
 
                     // This is the accumulated speed change at this stage, not the average yet.
                     averageSpeedChange += speedB - speedA;
@@ -1293,17 +1220,14 @@ namespace VG.Extensions
                 return true;
             }
 
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         /// <summary>
-        /// Get y from a linear function, with x as an input. The linear function goes through points
-        /// 0,0 on the left ,and Qxy on the right.
+        ///     Get y from a linear function, with x as an input. The linear function goes through points
+        ///     0,0 on the left ,and Qxy on the right.
         /// </summary>
-        public static float LinearFunction2DBasic (float x, float Qx, float Qy)
+        public static float LinearFunction2DBasic(float x, float Qx, float Qy)
         {
             var y = x * (Qy / Qx);
 
@@ -1311,10 +1235,10 @@ namespace VG.Extensions
         }
 
         /// <summary>
-        /// Get y from a linear function, with x as an input. The linear function goes through points
-        /// Pxy on the left ,and Qxy on the right.
+        ///     Get y from a linear function, with x as an input. The linear function goes through points
+        ///     Pxy on the left ,and Qxy on the right.
         /// </summary>
-        public static float LinearFunction2DFull (float x, float Px, float Py, float Qx, float Qy)
+        public static float LinearFunction2DFull(float x, float Px, float Py, float Qx, float Qy)
         {
             var y = 0f;
 
@@ -1328,46 +1252,34 @@ namespace VG.Extensions
         }
 
         /// <summary>
-        /// Convert a rotation difference to a speed vector.
-        /// For internal use only.
+        ///     Convert a rotation difference to a speed vector.
+        ///     For internal use only.
         /// </summary>
-        private static Vector3 RotDiffToSpeedVec (Quaternion rotation, float deltaTime)
+        private static Vector3 RotDiffToSpeedVec(Quaternion rotation, float deltaTime)
         {
             float x;
             float y;
             float z;
 
             if (rotation.eulerAngles.x <= 180.0f)
-            {
                 x = rotation.eulerAngles.x;
-            }
 
             else
-            {
                 x = rotation.eulerAngles.x - 360.0f;
-            }
 
             if (rotation.eulerAngles.y <= 180.0f)
-            {
                 y = rotation.eulerAngles.y;
-            }
 
             else
-            {
                 y = rotation.eulerAngles.y - 360.0f;
-            }
 
             if (rotation.eulerAngles.z <= 180.0f)
-            {
                 z = rotation.eulerAngles.z;
-            }
 
             else
-            {
                 z = rotation.eulerAngles.z - 360.0f;
-            }
 
-            return new Vector3 (x / deltaTime, y / deltaTime, z / deltaTime);
+            return new Vector3(x / deltaTime, y / deltaTime, z / deltaTime);
         }
     }
 }

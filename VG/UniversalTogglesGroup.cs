@@ -10,18 +10,18 @@ namespace VG
 {
     public class UniversalTogglesGroup : ToggleGroup
     {
-        [SerializeField] private List<UniversalToggleData> toggles = new List<UniversalToggleData> ();
-        [SerializeField] private List<Image> images = new List<Image> ();
-        [SerializeField] private List<TextMeshProUGUI> texts = new List<TextMeshProUGUI> ();
-
-        private ReadOnlyCollection<UniversalToggleData> togglesWrapper;
+        [SerializeField] private List<UniversalToggleData> toggles = new();
+        [SerializeField] private List<Image> images = new();
+        [SerializeField] private List<TextMeshProUGUI> texts = new();
         private ReadOnlyCollection<Image> imagesWrapper;
         private ReadOnlyCollection<TextMeshProUGUI> textsWrapper;
 
-        public ReadOnlyCollection<UniversalToggleData> Toggles => togglesWrapper ??= toggles.AsReadOnly ();
-        public ReadOnlyCollection<Image> Images => imagesWrapper ??= images.AsReadOnly ();
-        public ReadOnlyCollection<TextMeshProUGUI> Texts => textsWrapper ??= texts.AsReadOnly ();
-        
+        private ReadOnlyCollection<UniversalToggleData> togglesWrapper;
+
+        public ReadOnlyCollection<UniversalToggleData> Toggles => togglesWrapper ??= toggles.AsReadOnly();
+        public ReadOnlyCollection<Image> Images => imagesWrapper ??= images.AsReadOnly();
+        public ReadOnlyCollection<TextMeshProUGUI> Texts => textsWrapper ??= texts.AsReadOnly();
+
         public Image image => Images[0];
         public Image secondImage => Images[1];
         public Image thirdImage => Images[2];
@@ -32,65 +32,74 @@ namespace VG
         public TextMeshProUGUI primaryText => Texts[0];
         public TextMeshProUGUI secondaryText => Texts[1];
         public TextMeshProUGUI tertiaryText => Texts[2];
-        
+
         public string text
         {
             get => primaryText.text;
             set => primaryText.text = value;
         }
+
         public Sprite sprite
         {
             get => image.sprite;
             set => image.sprite = value;
         }
 
-        protected void Reset ()
+        protected new void Reset()
         {
             //base.Reset ();
-            toggles.Clear ();
-            images.Clear ();
-            texts.Clear ();
+            toggles.Clear();
+            images.Clear();
+            texts.Clear();
 
-            var txt = GetComponent<TextMeshProUGUI> ();
-            if (txt) texts.Add (txt);
-            var img = GetComponent<Image> ();
-            if (img) images.Add (img);
+            var txt = GetComponent<TextMeshProUGUI>();
+            if (txt) texts.Add(txt);
+            var img = GetComponent<Image>();
+            if (img) images.Add(img);
 
-            foreach (Transform item in transform) Collect (item);
+            foreach (Transform item in transform) Collect(item);
 
-            void Collect (Transform tfm)
+            void Collect(Transform tfm)
             {
-                var x = tfm.GetComponent<Toggle> ();
+                var x = tfm.GetComponent<Toggle>();
                 if (x)
                 {
                     x.group = this;
-                    toggles.Add (new UniversalToggleData (x));
+                    toggles.Add(new UniversalToggleData(x));
                     return;
                 }
 
-                var t = tfm.GetComponent<TextMeshProUGUI> ();
-                if (t) texts.Add (t);
-                var i = tfm.GetComponent<Image> ();
-                if (i) images.Add (i);
+                var t = tfm.GetComponent<TextMeshProUGUI>();
+                if (t) texts.Add(t);
+                var i = tfm.GetComponent<Image>();
+                if (i) images.Add(i);
 
-                foreach (Transform it in tfm) Collect (it);
+                foreach (Transform it in tfm) Collect(it);
             }
         }
 
-        [Serializable] public class UniversalToggleData
+        [Serializable]
+        public class UniversalToggleData
         {
             [SerializeField] private Toggle toggle;
             [SerializeField] private List<Image> images;
             [SerializeField] private List<TextMeshProUGUI> texts;
 
-            public Toggle Toggle => toggle;
-            
             private ReadOnlyCollection<Image> imagesWrapper;
             private ReadOnlyCollection<TextMeshProUGUI> textsWrapper;
-            
-            public ReadOnlyCollection<Image> Images => imagesWrapper ??= images.AsReadOnly ();
-            public ReadOnlyCollection<TextMeshProUGUI> Texts => textsWrapper ??= texts.AsReadOnly ();
-            
+
+            public UniversalToggleData(Toggle toggle)
+            {
+                this.toggle = toggle;
+                images = toggle.GetComponentsInChildren<Image>().ToList();
+                texts = toggle.GetComponentsInChildren<TextMeshProUGUI>().ToList();
+            }
+
+            public Toggle Toggle => toggle;
+
+            public ReadOnlyCollection<Image> Images => imagesWrapper ??= images.AsReadOnly();
+            public ReadOnlyCollection<TextMeshProUGUI> Texts => textsWrapper ??= texts.AsReadOnly();
+
             public Image image => Images[0];
             public Image secondImage => Images[1];
             public Image thirdImage => Images[2];
@@ -101,29 +110,23 @@ namespace VG
             public TextMeshProUGUI primaryText => Texts[0];
             public TextMeshProUGUI secondaryText => Texts[1];
             public TextMeshProUGUI tertiaryText => Texts[2];
-            
+
             public bool isOn
             {
                 get => toggle.isOn;
                 set => toggle.isOn = value;
             }
-            
+
             public string text
             {
                 get => primaryText.text;
                 set => primaryText.text = value;
             }
+
             public Sprite sprite
             {
                 get => image.sprite;
                 set => image.sprite = value;
-            }
-
-            public UniversalToggleData (Toggle toggle)
-            {
-                this.toggle = toggle;
-                images = toggle.GetComponentsInChildren<Image> ().ToList ();
-                texts = toggle.GetComponentsInChildren<TextMeshProUGUI> ().ToList ();
             }
         }
     }

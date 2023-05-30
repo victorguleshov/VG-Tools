@@ -1,12 +1,15 @@
 ﻿using UnityEngine;
 
-public class ScreenSizeAdjuster : MonoBehaviour
+namespace VG.UI
 {
-	[SerializeField] private float sizeRate;
+    public class ScreenSizeAdjuster : MonoBehaviour
+    {
+        [SerializeField] private float sizeRate;
 
-	void Start ()
-	{
-		float width = ScreenSizeConverter.GetScreenToWorldHeight;
-		transform.localScale = Vector3.one * width * sizeRate;
-	}
+        private void Start()
+        {
+            var width = ScreenSizeConverter.GetScreenToWorldHeight;
+            transform.localScale = Vector3.one * width * sizeRate;
+        }
+    }
 }

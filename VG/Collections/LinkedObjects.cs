@@ -13,9 +13,7 @@ namespace VG.Collections
         private object _syncRoot;
         private int version;
 
-        public LinkedObjects()
-        {
-        }
+        public LinkedObjects() { }
 
         public LinkedObjects(params T[] collection)
         {
@@ -430,9 +428,7 @@ namespace VG.Collections
                 _index = 0;
             }
 
-            public void Dispose()
-            {
-            }
+            public void Dispose() { }
         }
     }
 }

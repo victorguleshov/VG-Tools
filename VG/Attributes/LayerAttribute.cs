@@ -2,7 +2,5 @@
 
 namespace VG.Attributes
 {
-    public class LayerAttribute : PropertyAttribute
-    {
-    }
+    public class LayerAttribute : PropertyAttribute { }
 }

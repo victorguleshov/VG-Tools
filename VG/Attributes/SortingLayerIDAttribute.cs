@@ -2,7 +2,5 @@
 
 namespace VG.Attributes
 {
-    public class SortingLayerIDAttribute : PropertyAttribute
-    {
-    }
+    public class SortingLayerIDAttribute : PropertyAttribute { }
 }
